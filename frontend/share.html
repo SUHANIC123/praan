@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pran — Live Emergency Update</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/pran.css" />
+  <style>
+    body { background: var(--bg); overflow-x: hidden; }
+
+    .share-layout {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 16px 100px;
+    }
+
+    .live-banner {
+      background: var(--green-light);
+      border-radius: var(--radius-pill);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--green);
+      margin: 16px 0;
+    }
+
+    .track-map-wrap {
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      height: 240px;
+      position: relative;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 12px;
+    }
+    #share-map { height: 100%; width: 100%; }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .info-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+    .info-card .info-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .info-card .info-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .info-card .info-value span { font-size: 16px; font-weight: 600; }
+    .info-card .info-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .info-card .status-text { font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+
+    .hospital-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .hospital-card .hosp-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .hospital-card .hosp-name { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+    .hospital-card .hosp-addr { font-size: 13px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
+    .directions-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      cursor: pointer; border: none; background: none;
+    }
+    .directions-icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--red-light);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .directions-btn span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--red); }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .action-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px; border-radius: var(--radius-xl);
+      font-weight: 600; font-size: 14px; cursor: pointer;
+      border: none; text-decoration: none; transition: all 0.15s;
+    }
+    .action-btn-ghost { background: white; border: 1.5px solid var(--border); color: var(--text-primary); }
+    .action-btn-red { background: var(--red); color: white; }
+
+    /* Bottom nav */
+    .fixed-bottom-nav {
+      position: fixed;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+    }
+
+    /* Timeline */
+    .timeline-card {
+      background: white; border-radius: var(--radius-lg);
+      padding: 20px; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border); margin-bottom: 12px;
+    }
+    .timeline-list { display: flex; flex-direction: column; gap: 0; }
+    .timeline-item { display: flex; align-items: flex-start; gap: 16px; position: relative; }
+    .timeline-item:not(:last-child)::after {
+      content: ''; position: absolute;
+      left: 11px; top: 28px; bottom: -20px;
+      width: 2px; background: var(--border);
+    }
+    .timeline-item.done::after { background: var(--green-dot); }
+    .timeline-dot {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 3px solid var(--border); background: white;
+      flex-shrink: 0; margin-top: 2px; position: relative; z-index: 1;
+    }
+    .timeline-dot.active { border-color: var(--red); background: var(--red); box-shadow: 0 0 0 4px rgba(200,16,46,0.15); }
+    .timeline-dot.done { border-color: var(--green-dot); background: var(--green-dot); }
+    .timeline-content { padding-bottom: 24px; flex: 1; }
+    .timeline-content .tl-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .timeline-item:not(.active):not(.done) .tl-title { color: var(--text-muted); }
+    .timeline-content .tl-title.active-text { color: var(--red); }
+    .timeline-content .tl-sub { font-size: 12px; color: var(--text-secondary); }
+    .timeline-content .tl-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .status-note-card {
+      background: var(--red-light); border-radius: var(--radius-lg);
+      padding: 16px 20px; border: 1px solid rgba(200,16,46,0.12); margin-bottom: 12px;
+    }
+    .status-note-card .note-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .note-icon { width: 28px; height: 28px; background: var(--red); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; }
+    .status-note-card .note-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); }
+    .status-note-card .note-text { font-size: 14px; color: var(--text-primary); line-height: 1.6; font-style: italic; margin-bottom: 8px; }
+    .status-note-card .note-by { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+
+    /* Read-only badge */
+    .readonly-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-minimal" style="display:flex;align-items:center;padding:12px 24px">
+    <a href="index.html" class="nav-logo" style="font-size:18px">
+      <div class="logo-icon" style="width:28px;height:28px;font-size:14px">✚</div>
+      Pran
+    </a>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <div class="readonly-badge">👁 View Only</div>
+      <div class="nav-user">
+        <span id="nav-username">Amrisha</span>
+        <div class="nav-avatar" id="nav-avatar">A</div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="share-layout">
+    <div class="live-banner">
+      <span class="dot dot-live"></span>
+      <span id="bannerText">Live emergency update — loading...</span>
+    </div>
+
+    <div class="track-map-wrap">
+      <div id="share-map"></div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">Estimated Arrival</div>
+        <div class="info-value" id="eta-value">--<span> min</span></div>
+        <div class="info-sub">
+          <span class="dot dot-live"></span>
+          <span style="color:var(--green)">Live Tracking</span>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Patient Status</div>
+        <div class="status-text" id="patient-status">—</div>
+        <div id="status-updated" style="font-size:12px;color:var(--text-secondary);margin-top:4px">Awaiting update</div>
+      </div>
+    </div>
+
+    <div class="hospital-card" id="hospitalCard" style="display:none">
+      <div>
+        <div class="hosp-label">Transporting To</div>
+        <div class="hosp-name" id="hospital-name">—</div>
+        <div class="hosp-addr" id="hospital-addr">—</div>
+      </div>
+      <button class="directions-btn" id="directionsBtn">
+        <div class="directions-icon">🧭</div>
+        <span>Directions</span>
+      </button>
+    </div>
+
+    <div class="action-row">
+      <button class="action-btn action-btn-ghost" id="copyLinkBtn">
+        📋 Share Link
+      </button>
+      <button class="action-btn action-btn-red" id="callHospBtn">
+        📞 Call Ambulance Driver
+      </button>
+    </div>
+
+    <div class="timeline-card">
+      <div class="timeline-list" id="timeline-list"></div>
+    </div>
+
+    <div class="status-note-card" id="statusNoteCard" style="display:none">
+      <div class="note-header">
+        <div class="note-icon">≡</div>
+        <div class="note-label">Patient Status Note</div>
+      </div>
+      <div class="note-text" id="note-text">—</div>
+      <div class="note-by" id="note-by">— Paramedic</div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="fixed-bottom-nav">
+    <div class="bottom-nav">
+      <a href="summary.html" id="btn-summary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>
+        Summary
+      </a>
+      <a href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9L12 2l9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Home
+      </a>
+      <a href="track.html" id="btn-track">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+        Track
+      </a>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/googleMapsCore.js"></script>
+  <script src="js/share.js"></script>
+</body>
+</html>

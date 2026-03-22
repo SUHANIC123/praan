@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pran — Ride history</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/pran.css" />
+  <style>
+    .hist-wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .hist-head { margin-bottom: 20px; }
+    .hist-head h1 { font-size: 24px; font-weight: 800; }
+    .hist-head p { color: var(--text-secondary); font-size: 14px; margin-top: 4px; }
+    .table-wrap {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      overflow: hidden; box-shadow: var(--shadow-sm);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left; padding: 12px 14px; background: var(--border-light);
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+    }
+    td { padding: 14px; border-top: 1px solid var(--border); vertical-align: top; }
+    tr:hover td { background: #FAFAFA; }
+    .status-pill {
+      display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill);
+      font-size: 11px; font-weight: 700; text-transform: capitalize;
+    }
+    .status-pill.completed { background: var(--green-light); color: var(--green); }
+    .status-pill.dispatched, .status-pill.transporting { background: var(--red-light); color: var(--red); }
+    .status-pill.cancelled { background: #F3F4F6; color: var(--text-secondary); }
+    .mono { font-variant-numeric: tabular-nums; }
+    .empty { padding: 48px; text-align: center; color: var(--text-secondary); font-size: 14px; }
+    .link-sum { color: var(--red); font-weight: 700; text-decoration: none; }
+    .link-sum:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-minimal">
+    <a href="index.html" class="nav-logo">
+      <div class="logo-icon">✚</div>
+      Pran
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="history.html" class="active">History</a></li>
+    </ul>
+    <div class="nav-user">
+      <span data-nav-username>—</span>
+      <button type="button" class="btn-outline" id="btnLogout" style="margin-left:12px">Logout</button>
+    </div>
+  </nav>
+
+  <div class="hist-wrap">
+    <div class="hist-head">
+      <h1>Past rides &amp; transactions</h1>
+      <p>Every ambulance request linked to your account, with status and billing summary.</p>
+    </div>
+
+    <div class="table-wrap">
+      <div id="histEmpty" class="empty" style="display:none">No rides yet. Request an ambulance from the home page while logged in.</div>
+      <table id="histTable" style="display:none">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Case / type</th>
+            <th>Status</th>
+            <th>Ambulance</th>
+            <th>Hospital</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="js/config.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Praan — Dispatch Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-container-high": "#e7e8e9",
+          "inverse-on-surface": "#f0f1f2",
+          "on-error-container": "#93000a",
+          "background": "#f8f9fa",
+          "outline": "#906f6c",
+          "primary-fixed-dim": "#ffb3ad",
+          "inverse-primary": "#ffb3ad",
+          "surface": "#f8f9fa",
+          "on-primary-container": "#ffc7c2",
+          "primary-container": "#b8101e",
+          "error": "#ba1a1a",
+          "on-primary": "#ffffff",
+          "error-container": "#ffdad6",
+          "tertiary": "#004779",
+          "secondary-container": "#fd8179",
+          "on-primary-fixed-variant": "#930012",
+          "on-secondary": "#ffffff",
+          "on-error": "#ffffff",
+          "secondary": "#a23d38",
+          "on-tertiary-container": "#bad8ff",
+          "secondary-fixed-dim": "#ffb3ad",
+          "tertiary-fixed-dim": "#9ecaff",
+          "secondary-fixed": "#ffdad7",
+          "surface-bright": "#f8f9fa",
+          "on-background": "#191c1d",
+          "on-secondary-fixed-variant": "#822523",
+          "on-tertiary-fixed-variant": "#00497d",
+          "primary": "#8e0011",
+          "surface-container-highest": "#e1e3e4",
+          "on-tertiary": "#ffffff",
+          "on-secondary-container": "#731a19",
+          "inverse-surface": "#2e3132",
+          "surface-dim": "#d9dadb",
+          "tertiary-fixed": "#d1e4ff",
+          "on-tertiary-fixed": "#001d36",
+          "surface-tint": "#bc1420",
+          "outline-variant": "#e4bdba",
+          "surface-container-low": "#f3f4f5",
+          "on-secondary-fixed": "#410004",
+          "surface-container": "#edeeef",
+          "primary-fixed": "#ffdad7",
+          "on-primary-fixed": "#410004",
+          "surface-container-lowest": "#ffffff",
+          "on-surface-variant": "#5b403d",
+          "on-surface": "#191c1d",
+          "tertiary-container": "#005fa0",
+          "surface-variant": "#e1e3e4"
+        },
+        fontFamily: {
+          "headline": ["Plus Jakarta Sans"],
+          "body": ["DM Sans"],
+          "label": ["Plus Jakarta Sans"]
+        },
+        borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+  }
+  .marching-ants {
+    stroke-dasharray: 8;
+    animation: dash 30s linear infinite;
+  }
+  @keyframes dash {
+    to { stroke-dashoffset: -1000; }
+  }
+  .pulse-ring {
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Clock */
+  #live-clock { font-variant-numeric: tabular-nums; }
+
+  /* Toast slide-in */
+  #incoming-toast {
+    animation: slideIn 0.4s ease forwards;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+  }
+
+  /* Incident card active selection */
+  .incident-card.selected {
+    outline: 2px solid #b8101e;
+    box-shadow: 0 0 0 2px #b8101e;
+  }
+
+  /* Dispatch confirm button loading */
+  .btn-loading { opacity: 0.7; pointer-events: none; }
+</style>
+</head>
+<body class="bg-surface font-body text-on-surface" data-mode="connect">
+
+<!-- ═══════════════════════ TOP NAV BAR ═══════════════════════ -->
+<header class="fixed top-0 w-full z-50 h-[56px] glass-nav flex justify-between items-center px-6 shadow-[0_20px_40px_rgba(24,29,26,0.06)]">
+  <div class="flex items-center gap-6">
+    <!-- Brand -->
+    <a href="../../index.html" class="flex items-center gap-2 text-xl font-extrabold text-[#1A1A2E]">
+      <div class="w-8 h-8 bg-primary-container flex items-center justify-center rounded-sm">
+        <span class="material-symbols-outlined text-white text-lg">add</span>
+      </div>
+      <span class="text-primary-container">Praan</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 ml-8">
+      <a class="text-primary-container font-bold border-b-2 border-primary-container pb-1 font-label text-[12px] uppercase tracking-wider" href="#">Dispatch Center</a>
+      <a class="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300 font-label text-[12px] uppercase tracking-wider" href="fleet.html">Ambulance Fleet</a>
+    </nav>
+  </div>
+
+  <div class="flex items-center gap-6">
+    <!-- System Stats -->
+    <div class="flex gap-4 items-center">
+      <div class="flex flex-col items-end">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Status</span>
+        <div class="flex gap-3 text-[11px] font-bold flex-wrap justify-end">
+          <span class="text-amber-600" id="stat-pending" title="Awaiting dispatcher">0 Pending</span>
+          <span class="text-error" id="stat-tracking" title="Ambulance assigned">0 Tracking</span>
+          <span class="text-tertiary" id="stat-enroute">0 En Route</span>
+          <span class="text-emerald-600" id="stat-available">0 Available</span>
+        </div>
+      </div>
+      <div class="h-8 w-[1px] bg-slate-200"></div>
+      <div class="text-lg font-bold font-headline" id="live-clock">00:00:00</div>
+    </div>
+
+    <div class="flex gap-2">
+      <button class="p-2 hover:bg-slate-100/50 rounded-full transition-all relative" id="notif-btn" title="Notifications">
+        <span class="material-symbols-outlined text-slate-600">notifications</span>
+        <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+      </button>
+      <!-- Dispatcher avatar -->
+      <div class="flex items-center gap-2 pl-2">
+        <div class="w-8 h-8 rounded-full overflow-hidden bg-slate-200">
+          <img class="w-full h-full object-cover" alt="Dispatcher Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZK4llCvoVlVlQ42I-ifqJk_hK93qIbYKyLiQSJaJ-9XcVwJ0J0aAp6HoiE9TLYoGA7PSxVMenCIvymHiKws4ETdCsgXzcsoaf2SBsG0wWy5XhS2jG9QJTz5gyaEbtbfuELGDszL_DULzKUgsD_9Jq8n17bi9wSYrrbaCUml-SM_IMa58jiRDM17QP0k_REaMDdeUtvqcuBpUzBiplIepw-DvZqHSTW_CPhVeTJLT7RqfMa63IDM6q1sAoGlhwN0UzY8Fc29_tKQ">
+        </div>
+        <span class="text-[12px] font-bold text-slate-700 hidden md:block">Dispatcher</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════ MAIN LAYOUT ═══════════════════════ -->
+<main class="flex h-screen pt-[56px] overflow-hidden">
+
+  <!-- ═══ LEFT COLUMN: Incident Queue (25%) ═══ -->
+  <aside class="w-[25%] h-full bg-surface-container flex flex-col border-r-0">
+    <div class="p-4 flex justify-between items-center border-b border-slate-200/60">
+      <div class="flex items-center gap-2">
+        <h2 class="font-headline font-bold text-[14px] uppercase tracking-tight">Queues</h2>
+        <span class="flex items-center gap-1 bg-error-container text-error px-2 py-0.5 rounded-full text-[10px] font-bold">
+          <span class="w-1.5 h-1.5 bg-error rounded-full animate-pulse"></span>
+          LIVE
+        </span>
+      </div>
+      <span class="bg-surface-container-highest px-2 py-1 rounded-md text-[11px] font-bold" id="incident-count-badge">0</span>
+    </div>
+
+    <div class="flex-1 overflow-y-auto no-scrollbar px-3 flex flex-col gap-5 pb-8 py-3">
+      <div>
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Awaiting manual action</h3>
+        <p class="text-[11px] text-slate-400 px-1 mb-2">Normally empty — ambulances auto-assign on patient request. Use Accept / Decline only for edge cases.</p>
+        <div class="flex flex-col gap-3 min-h-[48px]" id="dispatch-pending-queue"></div>
+      </div>
+      <div>
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Active / tracking</h3>
+        <p class="text-[11px] text-slate-400 px-1 mb-2">Ambulance assigned — live ETA and status.</p>
+        <div class="flex flex-col gap-3 min-h-[48px]" id="dispatch-tracking-queue"></div>
+      </div>
+      <div class="border-t border-slate-200/80 pt-3 mt-1 shrink-0">
+        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Dispatch log</h3>
+        <p class="text-[10px] text-slate-400 px-1 mb-1">Stored events (auto-assign, notes).</p>
+        <div id="dispatch-activity-log" class="text-[10px] text-slate-600 space-y-1 max-h-36 overflow-y-auto px-1 leading-snug"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ RIGHT COLUMN: Live Map (75%) ═══ -->
+  <section class="w-[75%] h-full relative bg-[#eef0f3] overflow-hidden">
+
+    <!-- Live Leaflet Map -->
+    <div id="dispatch-map" class="absolute inset-0 z-0"></div>
+
+    <!-- ── Top Center: Status Pill ── -->
+    <div class="absolute top-6 left-1/2 -translate-x-1/2 z-30 glass-card px-6 py-2 rounded-full shadow-2xl flex items-center gap-6 border border-white/50">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wide">Area Secure</span>
+      </div>
+      <div class="w-[1px] h-4 bg-slate-300"></div>
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Response Efficiency</span>
+        <span class="text-[11px] font-black text-primary-container">98%</span>
+      </div>
+    </div>
+
+    <!-- ── Incoming Alert Toast ── -->
+    <div class="absolute top-6 right-6 z-40 glass-card bg-red-50/90 border border-red-200/50 p-4 rounded-xl shadow-2xl max-w-xs" id="incoming-toast">
+      <div class="flex gap-3">
+        <div class="w-10 h-10 bg-error-container rounded-lg flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-error">notification_important</span>
+        </div>
+        <div class="flex-1">
+          <p class="text-[10px] font-black text-error uppercase mb-1">Incoming Alert</p>
+          <p class="font-headline font-bold text-sm leading-tight">Head Trauma Reported — Pier 42</p>
+          <p class="text-[11px] text-slate-500 mt-1">First Responder dispatched manually.</p>
+        </div>
+        <button class="self-start text-slate-400 hover:text-slate-700" id="toast-close">
+          <span class="material-symbols-outlined text-[16px]">close</span>
+        </button>
+      </div>
+    </div>
+
+
+
+    <!-- ── Bottom Right: Map Legend ── -->
+    <div class="absolute bottom-8 right-8 z-30 glass-card p-4 rounded-lg shadow-xl border border-white/30">
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Map Legend</p>
+      <div class="space-y-2">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-error"></span>
+          <span class="text-[10px] font-bold uppercase">Critical Incident</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded bg-[#22c55e]"></span>
+          <span class="text-[10px] font-bold uppercase">Ambulance Available</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded bg-[#ea580c]"></span>
+          <span class="text-[10px] font-bold uppercase">Ambulance En Route</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+          <span class="text-[10px] font-bold uppercase">Public Hospital</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ═══════════════════════ DISPATCH SUCCESS TOAST ═══════════════════════ -->
+<div id="success-toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden glass-card bg-emerald-50 border border-emerald-500/30 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+  <span class="material-symbols-outlined text-emerald-600" style="font-variation-settings:'FILL' 1">check_circle</span>
+  <span class="text-[13px] font-bold text-emerald-700" id="success-msg">Dispatch confirmed!</span>
+</div>
+
+<!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+<script src="js/portal-config.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBwaeImlXfKbluZWSsSONs4J0ETNu2Hrz8&v=beta&libraries=marker,routes"></script>
+<script src="js/dispatch-portal.js"></script>
+
+</body>
+</html>

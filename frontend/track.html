@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pran — Track</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:         #C8102E;
+      --red-dark:    #A50D25;
+      --red-light:   #FEF2F4;
+      --green:       #2A7A4B;
+      --green-light: #ECFDF5;
+      --green-dot:   #22C55E;
+      --orange:      #F97316;
+      --blue:        #1D4ED8;
+      --text-primary:   #111827;
+      --text-secondary: #6B7280;
+      --text-muted:     #9CA3AF;
+      --border:      #E5E7EB;
+      --bg:          #F3F4F6;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:   0 4px 16px rgba(0,0,0,0.10);
+      --radius-sm:   8px;
+      --radius-md:   12px;
+      --radius-lg:   16px;
+      --radius-xl:   20px;
+      --radius-pill: 999px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+
+    /* ── Top Nav ── */
+    .top-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 300;
+      height: 52px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+    }
+    .top-nav .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border: none; background: none; cursor: pointer;
+    }
+    .top-nav .back-btn:hover { color: var(--text-primary); }
+    .top-nav .nav-logo {
+      font-size: 17px; font-weight: 800;
+      color: var(--red); letter-spacing: -0.5px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .logo-cross {
+      width: 26px; height: 26px;
+      background: var(--red); color: white;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+    }
+    .live-dot {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-left: auto;
+      font-size: 12px; font-weight: 600;
+      color: var(--green);
+    }
+    .live-dot::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green-dot);
+      animation: pulse 1.4s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .nav-user { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+    .nav-avatar {
+      width: 30px; height: 30px;
+      background: var(--red); color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+
+    /* ── Main split layout ── */
+    .split-layout {
+      position: fixed;
+      top: 52px; left: 0; right: 0; bottom: 0;
+      display: flex;
+    }
+
+    /* ── Left Sidebar ── */
+    .sidebar {
+      width: 360px;
+      flex-shrink: 0;
+      background: var(--bg);
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      border-right: 1px solid var(--border);
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .sidebar-inner { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* Phase banner */
+    .phase-banner {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    .phase-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: var(--red-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .phase-icon.green { background: var(--green-light); }
+    .phase-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .phase-sub   { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+    /* Paramedic card */
+    .paramedic-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: none;
+    }
+    .paramedic-card .card-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-muted); margin-bottom: 10px;
+    }
+    .paramedic-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .paramedic-avatar {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #C8102E, #6D0019);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      color: white; font-weight: 700;
+    }
+    .paramedic-info { flex: 1; }
+    .paramedic-name { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+    .paramedic-unit {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700;
+      color: var(--red);
+      background: var(--red-light);
+      padding: 2px 8px; border-radius: var(--radius-pill);
+      margin-top: 3px;
+    }
+    .paramedic-type { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    .call-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--green);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 8px rgba(42,122,75,0.35);
+      transition: transform 0.15s;
+    }
+    .call-btn:hover { transform: scale(1.1); }
+
+    /* Section header */
+    .section-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 2px 0 4px;
+    }
+    .section-hdr .sh-title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+    .section-hdr .sh-sub { font-size: 10px; color: var(--text-muted); }
+
+    /* Hospital suggestion cards */
+    .hosp-card {
+      background: white;
+      border-radius: var(--radius-md);
+      padding: 12px 13px;
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .hosp-card:hover { border-color: var(--red); box-shadow: var(--shadow-md); }
+    .hosp-card.selected {
+      border-color: var(--red);
+      background: var(--red-light);
+    }
+    .hosp-card-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 7px;
+    }
+    .hosp-card-name  { font-size: 13px; font-weight: 800; color: var(--text-primary); }
+    .hosp-card-type  { font-size: 10px; color: var(--text-secondary); margin-top: 1px; }
+    .hosp-card-eta   { font-size: 20px; font-weight: 800; color: var(--red); line-height: 1; text-align: right; }
+    .hosp-card-eta small { font-size: 10px; font-weight: 600; color: var(--text-secondary); display: block; }
+    .hosp-card-badges { display: flex; flex-wrap: wrap; gap: 5px; }
+    .hbadge {
+      padding: 2px 7px; border-radius: var(--radius-pill);
+      font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .hbadge-rec  { background: var(--green-light); color: var(--green); }
+    .hbadge-spec { background: #EFF6FF; color: #1D4ED8; }
+    .hbadge-beds { background: var(--green-light); color: var(--green); }
+    .hbadge-low  { background: #FEF3C7; color: #92400E; }
+    .hosp-select-btn {
+      display: none;
+      width: 100%; margin-top: 9px;
+      padding: 7px; border-radius: var(--radius-sm);
+      background: var(--red); color: white;
+      font-size: 12px; font-weight: 700; border: none; cursor: pointer;
+    }
+    .hosp-card:hover .hosp-select-btn   { display: block; }
+    .hosp-card.selected .hosp-select-btn { display: block; background: var(--green); }
+
+    /* Patient form */
+    .patient-form-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .patient-form-card .card-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-muted); margin-bottom: 10px;
+    }
+    .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .form-field { flex: 1; }
+    .form-field label {
+      display: block; font-size: 10px; font-weight: 700;
+      color: var(--text-muted); text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 4px;
+    }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%;
+      padding: 9px 11px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      font-size: 13px; font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: var(--text-primary);
+      background: var(--bg);
+      outline: none; transition: border-color 0.15s;
+    }
+    .form-field textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--red); background: white; }
+
+    .ai-handoff-card {
+      background: linear-gradient(180deg, #F8FAFC 0%, #fff 100%);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-top: 10px;
+    }
+    .ai-handoff-card .card-label { margin-bottom: 8px; }
+    .severity-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .severity-pill {
+      font-size: 22px; font-weight: 800; color: var(--red);
+      background: var(--red-light);
+      padding: 6px 14px; border-radius: var(--radius-pill);
+      letter-spacing: -0.02em;
+    }
+    .severity-pill span { font-size: 12px; font-weight: 700; color: var(--text-secondary); margin-left: 4px; }
+    .ai-summary-line {
+      font-size: 12px; font-weight: 600; color: var(--text-primary);
+      line-height: 1.45; margin-bottom: 10px;
+    }
+    .ai-report-body {
+      font-size: 12px; line-height: 1.55; color: var(--text-primary);
+      max-height: 220px; overflow-y: auto;
+      padding: 10px 12px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .ai-meta { font-size: 10px; color: var(--text-muted); margin-top: 8px; }
+    .patient-actions-row { display: flex; gap: 8px; margin-top: 10px; }
+    .patient-actions-row .analyse-btn { flex: 1; margin-top: 0; font-size: 12px; padding: 10px; }
+    .patient-actions-row .analyse-btn.secondary {
+      background: white; color: var(--red); border: 1.5px solid var(--red);
+    }
+    .patient-actions-row .analyse-btn.secondary:hover { background: var(--red-light); }
+
+    .analyse-btn {
+      width: 100%; padding: 12px;
+      border-radius: var(--radius-md);
+      background: var(--red); color: white;
+      font-size: 14px; font-weight: 700;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.15s; margin-top: 10px;
+    }
+    .analyse-btn:hover { background: var(--red-dark); }
+
+    /* Timeline (compact) */
+    .timeline-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .timeline-card .card-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-muted); margin-bottom: 10px;
+    }
+    .tl-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      position: relative; padding-bottom: 14px;
+    }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-item:not(:last-child)::after {
+      content: ''; position: absolute;
+      left: 9px; top: 22px; bottom: 0;
+      width: 2px; background: var(--border);
+    }
+    .tl-item.done::after { background: var(--green-dot); }
+    .tl-dot {
+      width: 20px; height: 20px;
+      border-radius: 50%; border: 2.5px solid var(--border);
+      background: white; flex-shrink: 0; margin-top: 1px;
+      position: relative; z-index: 1;
+    }
+    .tl-dot.active { border-color: var(--red); background: var(--red); box-shadow: 0 0 0 3px rgba(200,16,46,0.15); }
+    .tl-dot.done   { border-color: var(--green-dot); background: var(--green-dot); }
+    .tl-body .tl-title { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+    .tl-item:not(.active):not(.done) .tl-title { color: var(--text-muted); }
+    .tl-item.active .tl-title { color: var(--red); }
+    .tl-body .tl-sub { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+    .tl-body .tl-time { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+    /* Action row */
+    .action-row {
+      display: flex; gap: 8px;
+    }
+    .act-btn {
+      flex: 1; padding: 11px 8px;
+      border-radius: var(--radius-md);
+      font-size: 12px; font-weight: 700;
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.15s;
+    }
+    .act-btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text-primary); }
+    .act-btn-outline:hover { border-color: var(--text-secondary); }
+    .act-btn-green  { background: var(--green); color: white; }
+    .act-btn-green:hover { background: #225f3b; }
+
+    /* ── Map pane ── */
+    .map-pane {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    #track-map {
+      width: 100%;
+      height: 100%;
+      min-height: 280px;
+    }
+
+    /* Map overlays */
+    .map-overlay {
+      position: absolute;
+      z-index: 400;
+      pointer-events: none;
+    }
+
+    /* ETA hero (top-left of map) */
+    .eta-overlay {
+      top: 14px; left: 14px;
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 14px 18px;
+      box-shadow: var(--shadow-md);
+      pointer-events: none;
+      min-width: 160px;
+    }
+    .eta-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--text-muted); margin-bottom: 2px;
+    }
+    .eta-value {
+      font-size: 36px; font-weight: 800;
+      color: var(--red); line-height: 1;
+    }
+    .eta-unit { font-size: 16px; font-weight: 600; color: var(--text-secondary); }
+    .eta-sub { font-size: 11px; color: var(--text-secondary); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+    .eta-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green-dot);
+      animation: pulse 1.4s infinite;
+    }
+
+    /* km remaining pill (bottom-center) */
+    .km-pill {
+      bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(17,24,39,0.85);
+      backdrop-filter: blur(8px);
+      color: white;
+      border-radius: var(--radius-pill);
+      padding: 8px 18px;
+      font-size: 13px; font-weight: 700;
+      white-space: nowrap;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Incoming call overlay — top center when shown */
+    .call-overlay {
+      top: 14px;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      z-index: 450;
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-md);
+      display: none;
+      pointer-events: all;
+      min-width: 220px;
+      text-align: center;
+    }
+    .call-overlay.visible { display: block; }
+    .call-from { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+    .call-name { font-size: 16px; font-weight: 800; color: var(--text-primary); margin: 4px 0 10px; }
+    .call-actions { display: flex; gap: 8px; }
+    .call-decline, .call-accept {
+      flex: 1; padding: 9px 0;
+      border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 700;
+      border: none; cursor: pointer;
+    }
+    .call-decline { background: #F3F4F6; color: var(--text-secondary); }
+    .call-accept  { background: var(--green); color: white; }
+
+    /* Hospital route overlay (top-right when hospital selected) */
+    .hosp-info-pill {
+      top: 14px; right: 14px;
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: 12px 16px;
+      box-shadow: var(--shadow-md);
+      display: none;
+      min-width: 180px;
+    }
+    .hosp-info-pill.visible { display: block; }
+    .hip-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+    .hip-name  { font-size: 14px; font-weight: 800; color: var(--text-primary); margin: 3px 0 2px; }
+    .hip-eta   { font-size: 12px; font-weight: 600; color: var(--red); }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast-item {
+      background: #111827; color: white;
+      padding: 10px 18px; border-radius: var(--radius-pill);
+      font-size: 13px; font-weight: 600;
+      white-space: nowrap; box-shadow: var(--shadow-md);
+      animation: fadeInUp 0.2s ease;
+    }
+    .toast-item.success { background: var(--green); }
+    .toast-item.error   { background: var(--red); }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scrollbar for hospital list */
+    #hospList { display: flex; flex-direction: column; gap: 8px; }
+
+    /* Responsive: stack on small screens */
+    @media (max-width: 700px) {
+      .split-layout { flex-direction: column; }
+      .sidebar { width: 100%; height: 45%; border-right: none; border-bottom: 1px solid var(--border); }
+      .map-pane { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="top-nav">
+    <a href="index.html" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Home
+    </a>
+    <div class="nav-logo" style="margin-left:8px">
+      <div class="logo-cross">✚</div>
+      Pran
+    </div>
+    <div class="live-dot" id="liveIndicator">Live</div>
+    <div class="nav-user" style="display:flex;align-items:center;gap:10px">
+      <a href="dashboard.html" style="font-size:12px;font-weight:600;color:var(--red);text-decoration:none;display:none" data-auth-show>Dashboard</a>
+      <a href="history.html" style="font-size:12px;font-weight:600;color:var(--red);text-decoration:none;display:none" data-auth-show>History</a>
+      <span style="font-size:13px;font-weight:600;color:var(--text-secondary)" id="nav-username" data-nav-username>Guest</span>
+      <div class="nav-avatar" data-nav-avatar>G</div>
+    </div>
+  </nav>
+
+  <!-- Split Layout -->
+  <div class="split-layout">
+
+    <!-- ── LEFT SIDEBAR ── -->
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+
+        <!-- Phase Banner -->
+        <div class="phase-banner" id="phaseBanner">
+          <div class="phase-icon" id="phaseIcon">🚑</div>
+          <div>
+            <div class="phase-title" id="phaseTitle">Ambulance En Route</div>
+            <div class="phase-sub" id="phaseSub">Help is on the way to your location</div>
+            <div class="phase-sub" id="intakeReportLine" style="display:none;margin-top:6px;font-size:12px;color:var(--text-secondary);line-height:1.4"></div>
+          </div>
+        </div>
+
+        <!-- Paramedic Card -->
+        <div class="paramedic-card" id="paramedicCard">
+          <div class="card-label">Your Paramedic</div>
+          <div class="paramedic-row">
+            <div class="paramedic-avatar" id="paramedicAvatar">👨‍⚕️</div>
+            <div class="paramedic-info">
+              <div class="paramedic-name" id="paramedicName">—</div>
+              <div class="paramedic-unit" id="paramedicUnit">—</div>
+              <div class="paramedic-type" id="paramedicType">—</div>
+            </div>
+            <button class="call-btn" id="callBtn" title="WhatsApp paramedic" type="button">📞</button>
+          </div>
+        </div>
+
+        <!-- Suggested Hospitals -->
+        <div id="hospSection" style="display:none">
+          <div class="section-hdr">
+            <span class="sh-title">Suggested Hospitals</span>
+            <span class="sh-sub">ETA · Specialty · Beds</span>
+          </div>
+          <div id="hospList"></div>
+        </div>
+
+        <!-- Quick Patient Details + hospital handoff -->
+        <div class="patient-form-card" id="patientFormCard">
+          <div class="card-label">Patient Details</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Name</label>
+              <input type="text" id="patientName" placeholder="Full name" />
+            </div>
+            <div class="form-field">
+              <label>Age</label>
+              <input type="number" id="patientAge" placeholder="Years" min="0" max="120" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>Allergies</label>
+              <input type="text" id="patientAllergies" placeholder="None known" />
+            </div>
+            <div class="form-field">
+              <label>Medications</label>
+              <input type="text" id="patientMedications" placeholder="Current meds" />
+            </div>
+          </div>
+          <div class="form-field" style="margin-bottom:8px">
+            <label>Details for hospital</label>
+            <textarea id="patientDetailsHospital" placeholder="Chief complaint, timeline, symptoms, consciousness, breathing, bleeding, events — everything the receiving team should know."></textarea>
+          </div>
+          <div class="patient-actions-row">
+            <button type="button" class="analyse-btn secondary" id="savePatientBtn">Save details</button>
+            <button type="button" class="analyse-btn" id="generateAiReportBtn">Generate AI report</button>
+          </div>
+          <div class="ai-handoff-card" id="aiHandoffCard">
+            <div class="card-label">AI analysis &amp; hospital handoff</div>
+            <div class="severity-row">
+              <div class="severity-pill" id="aiSeverityPill">—<span>/10 urgency</span></div>
+            </div>
+            <div class="ai-summary-line" id="aiReportSummary">No report yet — save details, then generate.</div>
+            <div class="ai-report-body" id="aiHospitalReport">—</div>
+            <div class="ai-meta" id="aiReportMeta"></div>
+          </div>
+          <button class="analyse-btn" id="analyseBtn" onclick="openSymptomCheckerFromTrack()" style="margin-top:12px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            Analyse Symptoms &amp; Get First Aid Tips
+          </button>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-card">
+          <div class="card-label">Incident Timeline</div>
+          <div id="timelineList"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row">
+          <button class="act-btn act-btn-outline" id="shareLinkBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+            Share Link
+          </button>
+          <button class="act-btn act-btn-green" id="callAmbBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+            Call Crew
+          </button>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ── MAP PANE ── -->
+    <div class="map-pane">
+      <div id="track-map"></div>
+
+      <!-- ETA Overlay -->
+      <div class="map-overlay eta-overlay">
+        <div class="eta-label">Estimated Arrival</div>
+        <div><span class="eta-value" id="etaValue">--</span><span class="eta-unit"> min</span></div>
+        <div class="eta-sub">
+          <div class="eta-dot"></div>
+          <span id="kmRemaining">Live route</span>
+        </div>
+      </div>
+
+      <!-- km Remaining Pill -->
+      <div class="map-overlay km-pill" id="kmPill" style="display:none">
+        <span id="kmPillText">-- km remaining</span>
+      </div>
+
+      <!-- Incoming Call Overlay -->
+      <div class="map-overlay call-overlay" id="callOverlay">
+        <div class="call-from">Incoming Call</div>
+        <div class="call-name" id="callerName">Paramedic</div>
+        <div class="call-actions">
+          <button class="call-decline" onclick="dismissCall()">Decline</button>
+          <button class="call-accept"  onclick="acceptCall()">Accept</button>
+        </div>
+      </div>
+
+      <!-- Hospital Info Pill (after selection) -->
+      <div class="map-overlay hosp-info-pill" id="hospInfoPill">
+        <div class="hip-label">Heading To</div>
+        <div class="hip-name" id="hospPillName">—</div>
+        <div class="hip-eta" id="hospPillEta">—</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/googleMapsCore.js"></script>
+  <script src="js/track.js"></script>
+</body>
+</html>

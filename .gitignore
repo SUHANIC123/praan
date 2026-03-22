@@ -1,0 +1,5 @@
+*.md
+.claude/
+.claude
+.env
+node_modules/

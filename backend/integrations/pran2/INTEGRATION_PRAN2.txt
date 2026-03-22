@@ -1,0 +1,36 @@
+Pran2 dashboard integration (hospital + dispatch HTML under frontend/integrations/pran2)
+
+BACKEND WIRING (server.js — minimal; required for /api/portal and live hospital/dispatch sockets)
+
+  a) After other app.use('/api/...') routes:
+
+     require('./integrations/pran2/registerPortals')(app);
+
+  b) Inside mongoose.connect(...).then(...), after MongoDB is connected and before server.listen:
+
+     require('./integrations/pran2/registerIncidentHospitalRelay')(io);
+
+     This uses MongoDB change streams (update/replace) to emit incident_updated to hospital_<id>
+     and dispatch_incident_update to dispatchers when core PATCH routes do not fan out to those rooms.
+     If your local MongoDB is standalone without replica set, watch() may log a warning; the REST API still works.
+
+PORTAL API (mounted at /api/portal)
+
+  GET  /api/portal/stats
+  GET  /api/portal/incidents?active=1&hospitalId=...  (excludes incidents already accepted via accept-bed)
+  PATCH /api/portal/incidents/:id/accept-bed  { bedType, bedId } — integration-only bed acceptance + bed counts
+
+STATIC PAGES
+
+  Dispatch:   frontend/integrations/pran2/dispatch.html
+  Hospital:   frontend/integrations/pran2/hospital-dashboard.html?hospitalId=<MongoId>
+  Fleet:      frontend/integrations/pran2/fleet.html
+
+CONFIG
+
+  Default API/socket: http://localhost:3001 — edit frontend/integrations/pran2/js/portal-config.js if needed.
+
+NOTES
+
+  New code lives under backend/integrations/pran2 and frontend/integrations/pran2 only, except the two
+  server.js lines above.

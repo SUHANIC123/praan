@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Praan — Ambulance Fleet</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "surface-container-high": "#e7e8e9",
+          "inverse-on-surface": "#f0f1f2",
+          "on-error-container": "#93000a",
+          "background": "#f8f9fa",
+          "outline": "#906f6c",
+          "primary-fixed-dim": "#ffb3ad",
+          "inverse-primary": "#ffb3ad",
+          "surface": "#f8f9fa",
+          "on-primary-container": "#ffc7c2",
+          "primary-container": "#b8101e",
+          "error": "#ba1a1a",
+          "on-primary": "#ffffff",
+          "error-container": "#ffdad6",
+          "tertiary": "#004779",
+          "secondary-container": "#fd8179",
+          "on-primary-fixed-variant": "#930012",
+          "on-secondary": "#ffffff",
+          "on-error": "#ffffff",
+          "secondary": "#a23d38",
+          "on-tertiary-container": "#bad8ff",
+          "secondary-fixed-dim": "#ffb3ad",
+          "tertiary-fixed-dim": "#9ecaff",
+          "secondary-fixed": "#ffdad7",
+          "surface-bright": "#f8f9fa",
+          "on-background": "#191c1d",
+          "on-secondary-fixed-variant": "#822523",
+          "on-tertiary-fixed-variant": "#00497d",
+          "primary": "#8e0011",
+          "surface-container-highest": "#e1e3e4",
+          "on-tertiary": "#ffffff",
+          "on-secondary-container": "#731a19",
+          "inverse-surface": "#2e3132",
+          "surface-dim": "#d9dadb",
+          "tertiary-fixed": "#d1e4ff",
+          "on-tertiary-fixed": "#001d36",
+          "surface-tint": "#bc1420",
+          "outline-variant": "#e4bdba",
+          "surface-container-low": "#f3f4f5",
+          "on-secondary-fixed": "#410004",
+          "surface-container": "#edeeef",
+          "primary-fixed": "#ffdad7",
+          "on-primary-fixed": "#410004",
+          "surface-container-lowest": "#ffffff",
+          "on-surface-variant": "#5b403d",
+          "on-surface": "#191c1d",
+          "tertiary-container": "#005fa0",
+          "surface-variant": "#e1e3e4"
+        },
+        fontFamily: {
+          "headline": ["Plus Jakarta Sans"],
+          "body": ["DM Sans"],
+          "label": ["Plus Jakarta Sans"]
+        },
+        borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+  }
+  .primary-gradient {
+    background: linear-gradient(135deg, #8e0011 0%, #b8101e 100%);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Drawer transition */
+  #unit-drawer { transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); }
+  #unit-drawer.open { transform: translateX(0) !important; }
+
+  /* Add ambulance modal */
+  #add-modal { display: none; }
+  #add-modal.open { display: flex; }
+
+  /* Filter active state */
+  .filter-btn.active {
+    background-color: #b8101e;
+    color: #fff;
+  }
+
+  /* View toggle */
+  #list-view { display: none; }
+  body.list-mode #grid-view { display: none; }
+  body.list-mode #list-view { display: block; }
+</style>
+</head>
+<body class="bg-background font-body text-on-background antialiased selection:bg-primary-container selection:text-white">
+
+<!-- ═══════════════════════ NAV ═══════════════════════ -->
+<header class="fixed top-0 w-full z-50 h-[56px] glass-nav flex justify-between items-center px-6 shadow-[0_20px_40px_rgba(24,29,26,0.06)]">
+  <div class="flex items-center gap-6">
+    <!-- Brand -->
+    <a href="index.html" class="flex items-center gap-2 text-xl font-extrabold text-[#1A1A2E]">
+      <div class="w-8 h-8 bg-primary-container flex items-center justify-center rounded-sm">
+        <span class="material-symbols-outlined text-white text-lg">add</span>
+      </div>
+      <span class="text-primary-container">Praan</span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 ml-8">
+      <a class="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300 font-label text-[12px] uppercase tracking-wider" href="dispatch.html">Dispatch Center</a>
+      <a class="text-primary-container font-bold border-b-2 border-primary-container pb-1 font-label text-[12px] uppercase tracking-wider" href="#">Ambulance Fleet</a>
+    </nav>
+  </div>
+
+  <div class="flex items-center gap-6">
+    <!-- System Stats -->
+    <div class="flex gap-4 items-center hidden lg:flex">
+      <div class="flex flex-col items-end">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Status</span>
+        <div class="flex gap-3 text-[11px] font-bold">
+          <span class="text-error" id="stat-incidents">12 Incidents</span>
+          <span class="text-tertiary" id="stat-enroute">08 En Route</span>
+          <span class="text-emerald-600" id="stat-available">14 Available</span>
+        </div>
+      </div>
+      <div class="h-8 w-[1px] bg-slate-200"></div>
+      <div class="text-lg font-bold font-headline" id="live-clock">00:00:00</div>
+    </div>
+
+    <div class="flex gap-2">
+      <button class="p-2 hover:bg-slate-100/50 rounded-full transition-all relative" id="notif-btn" title="Notifications">
+        <span class="material-symbols-outlined text-slate-600">notifications</span>
+        <span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+      </button>
+      <!-- Dispatcher avatar -->
+      <div class="flex items-center gap-2 pl-2">
+        <div class="w-8 h-8 rounded-full overflow-hidden bg-slate-200">
+          <img class="w-full h-full object-cover" alt="Dispatcher Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZK4llCvoVlVlQ42I-ifqJk_hK93qIbYKyLiQSJaJ-9XcVwJ0J0aAp6HoiE9TLYoGA7PSxVMenCIvymHiKws4ETdCsgXzcsoaf2SBsG0wWy5XhS2jG9QJTz5gyaEbtbfuELGDszL_DULzKUgsD_9Jq8n17bi9wSYrrbaCUml-SM_IMa58jiRDM17QP0k_REaMDdeUtvqcuBpUzBiplIepw-DvZqHSTW_CPhVeTJLT7RqfMa63IDM6q1sAoGlhwN0UzY8Fc29_tKQ">
+        </div>
+        <span class="text-[12px] font-bold text-slate-700 hidden md:block">Dispatcher</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<main class="pt-[88px] pb-24 px-8 max-w-[1600px] mx-auto">
+
+  <!-- Header -->
+  <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+    <div>
+      <h1 class="font-headline font-extrabold text-[2.5rem] leading-none text-on-background tracking-tight">Ambulance Fleet</h1>
+      <p class="text-slate-500 mt-2 font-medium">Manage and monitor active units, responder status, and medical inventory across the metropolitan area.</p>
+    </div>
+    <button id="add-amb-btn" class="primary-gradient text-white h-[3.5rem] px-8 rounded-xl font-bold flex items-center gap-3 shadow-[0_20px_40px_rgba(184,16,30,0.15)] hover:scale-[1.02] active:scale-95 transition-all">
+      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">add_circle</span>
+      ADD AMBULANCE
+    </button>
+  </header>
+
+  <!-- Stats Bento -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+    <div class="bg-surface-container-lowest p-6 rounded-DEFAULT shadow-[0_20px_40px_rgba(24,29,26,0.06)] group hover:bg-surface-container-low transition-colors">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-surface-container rounded-lg text-slate-600 group-hover:bg-white transition-colors">
+          <span class="material-symbols-outlined">ambulance</span>
+        </div>
+        <span class="text-emerald-500 text-xs font-bold font-label">+2 Today</span>
+      </div>
+      <div class="text-[2.5rem] font-extrabold font-headline leading-none mb-1" id="stat-total">34</div>
+      <div class="text-slate-500 text-sm font-bold uppercase tracking-widest font-label">Total Fleet</div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-DEFAULT shadow-[0_20px_40px_rgba(24,29,26,0.06)] group hover:bg-surface-container-low transition-colors">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-white transition-colors">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">check_circle</span>
+        </div>
+        <span class="text-emerald-500 text-xs font-bold font-label">42%</span>
+      </div>
+      <div class="text-[2.5rem] font-extrabold font-headline leading-none mb-1" id="stat-available">14</div>
+      <div class="text-slate-500 text-sm font-bold uppercase tracking-widest font-label">Available Now</div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-DEFAULT shadow-[0_20px_40px_rgba(24,29,26,0.06)] group hover:bg-surface-container-low transition-colors">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-white transition-colors">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">navigation</span>
+        </div>
+        <span class="text-blue-500 text-xs font-bold font-label">Live</span>
+      </div>
+      <div class="text-[2.5rem] font-extrabold font-headline leading-none mb-1" id="stat-enroute">08</div>
+      <div class="text-slate-500 text-sm font-bold uppercase tracking-widest font-label">En Route</div>
+    </div>
+    <div class="bg-surface-container-lowest p-6 rounded-DEFAULT shadow-[0_20px_40px_rgba(24,29,26,0.06)] group hover:bg-surface-container-low transition-colors">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-red-50 text-red-600 rounded-lg group-hover:bg-white transition-colors">
+          <span class="material-symbols-outlined">settings_suggest</span>
+        </div>
+        <span class="text-red-500 text-xs font-bold font-label">Attention</span>
+      </div>
+      <div class="text-[2.5rem] font-extrabold font-headline leading-none mb-1" id="stat-offline">03</div>
+      <div class="text-slate-500 text-sm font-bold uppercase tracking-widest font-label">Offline/Maintenance</div>
+    </div>
+  </div>
+
+  <!-- Filter & Search -->
+  <div class="flex flex-col xl:flex-row gap-6 mb-8 items-center">
+    <div class="relative w-full xl:w-[400px]">
+      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+      <input id="search-input" class="w-full bg-surface-container-high border-none rounded-xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-primary/20 focus:bg-surface-container-highest transition-all outline-none text-on-surface font-medium placeholder:text-slate-500" placeholder="Search by unit ID, driver, or location..." type="text">
+    </div>
+    <div class="flex-1 overflow-x-auto no-scrollbar flex items-center gap-2 py-2">
+      <button class="filter-btn active px-5 py-2.5 bg-primary-container text-white rounded-full font-bold text-sm transition-all whitespace-nowrap" data-filter="all">All Units</button>
+      <button class="filter-btn px-5 py-2.5 bg-surface-container hover:bg-surface-container-highest text-slate-700 rounded-full font-bold text-sm transition-all whitespace-nowrap" data-filter="ALS">ALS (Advanced)</button>
+      <button class="filter-btn px-5 py-2.5 bg-surface-container hover:bg-surface-container-highest text-slate-700 rounded-full font-bold text-sm transition-all whitespace-nowrap" data-filter="BLS">BLS (Basic)</button>
+      <button class="filter-btn px-5 py-2.5 bg-surface-container hover:bg-surface-container-highest text-slate-700 rounded-full font-bold text-sm transition-all whitespace-nowrap" data-filter="ICU">ICU Transports</button>
+      <div class="h-6 w-[1px] bg-outline-variant/30 mx-2"></div>
+      <button class="filter-btn px-5 py-2.5 bg-surface-container hover:bg-surface-container-highest text-slate-700 rounded-full font-bold text-sm transition-all whitespace-nowrap" data-filter="available">Available</button>
+      <button class="filter-btn px-5 py-2.5 bg-surface-container hover:bg-surface-container-highest text-slate-700 rounded-full font-bold text-sm transition-all whitespace-nowrap" data-filter="enroute">En Route</button>
+      <button class="filter-btn px-5 py-2.5 bg-surface-container hover:bg-surface-container-highest text-slate-700 rounded-full font-bold text-sm transition-all whitespace-nowrap" data-filter="offline">Offline</button>
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="text-slate-400 font-label text-xs font-bold uppercase">Sort by:</span>
+      <button id="sort-btn" class="flex items-center gap-2 bg-white px-4 py-2.5 rounded-lg font-bold text-sm shadow-sm">
+        ETA <span class="material-symbols-outlined text-sm">expand_more</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── GRID VIEW ── -->
+  <div id="grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+
+    <!-- AMB-07: Available ALS -->
+    <div class="amb-card bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(24,29,26,0.06)] hover:-translate-y-1 transition-all duration-300 relative border-l-[6px] border-emerald-500 cursor-pointer"
+         data-unit="AMB-07" data-type="ALS" data-status="available" data-driver="Sarah Jenkins" data-location="St. Jude Medical Center">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex flex-col gap-2">
+            <span class="bg-surface-container-high text-on-surface text-xs font-extrabold px-3 py-1 rounded-full w-fit tracking-wider">AMB-07</span>
+            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter w-fit">ALS UNIT</span>
+          </div>
+          <div class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Available</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container">
+            <img alt="Sarah Jenkins" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyzt0T_zxPYlCKtJuKe4ZkhT0UBd-cq1zB3fBGThfZriMqYjl4gUNJKN54U2P9tdSlZc08ja2wkCgSgLyPBTkmakgRGf9Dpua2Iqko6A6YqqwiV0rOBKSuFw03n8IBa4q22k39o2fDNKE97u9znu9rH0SqllPYtH62hG9Qdm_QILsoel2RVm9xsN6jDO_gH03TEf11c0NH1dPR1n7Nfa3B6a1Gg_njc-87aDBsDdpfeX429-PgJeTABz5QIKAjevrs06TDr9dHPQ">
+          </div>
+          <div>
+            <h3 class="font-bold text-on-surface">Sarah Jenkins</h3>
+            <div class="flex gap-1 mt-1">
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">BLS</span>
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">ACLS</span>
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">TRAUMA</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+            <span class="font-medium">St. Jude Medical Center</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">schedule</span>
+            <span class="font-medium">Shift: 06:00 – 18:00</span>
+          </div>
+          <div class="flex gap-2">
+            <span class="material-symbols-outlined text-emerald-500" style="font-size:18px;font-variation-settings:'FILL' 1;">medical_services</span>
+            <span class="material-symbols-outlined text-emerald-500" style="font-size:18px;font-variation-settings:'FILL' 1;">monitor_heart</span>
+            <span class="material-symbols-outlined text-emerald-500" style="font-size:18px;font-variation-settings:'FILL' 1;">oxygen_saturation</span>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between mb-6">
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Jobs</div><div class="text-lg font-bold">12</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Avg Resp</div><div class="text-lg font-bold">8.4m</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Rating</div>
+            <div class="text-lg font-bold flex items-center gap-1">4.9<span class="material-symbols-outlined" style="font-size:14px;color:#fbbf24;font-variation-settings:'FILL' 1;">star</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMB-14: En Route ICU -->
+    <div class="amb-card bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(24,29,26,0.06)] hover:-translate-y-1 transition-all duration-300 relative border-l-[6px] border-blue-500 cursor-pointer"
+         data-unit="AMB-14" data-type="ICU" data-status="enroute" data-driver="Marc David" data-location="Sector 4">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex flex-col gap-2">
+            <span class="bg-surface-container-high text-on-surface text-xs font-extrabold px-3 py-1 rounded-full w-fit tracking-wider">AMB-14</span>
+            <span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter w-fit">ICU UNIT</span>
+          </div>
+          <div class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest">En Route</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container">
+            <img alt="Marc David" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCulXLVIVVN-hr5Envwg_ZmKGgEhUlN8TAUSFxuaz8dzYHVcDIHUB24noxPVMHg8XDq26VWCnjJ_xn27J_2M1luFHcksXnStA_WtQigQ-YnD80q6UvGYaxpYe8MzE6QfaXG5kPGLvkyZvxnu36-TZKLM59ovm-cTXajayLzpzHVh2aSXgodbj-sH8guMKPANol-byo9TwkLw1HGUj3ITa7s7Bkk07GVjuY5ylH89EoPhl3sKbRSaL7eRl3evzlYsgUcNKdIAS9OXA">
+          </div>
+          <div>
+            <h3 class="font-bold text-on-surface">Marc David</h3>
+            <div class="flex gap-1 mt-1">
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">PARAMEDIC</span>
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">CCM</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">navigation</span>
+            <span class="font-bold text-blue-600">ETA: 4 mins — Sector 4</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">flag</span>
+            <span class="font-medium">Incident #8492-B</span>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between mb-6">
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Jobs</div><div class="text-lg font-bold">08</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Avg Resp</div><div class="text-lg font-bold">11.2m</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Rating</div>
+            <div class="text-lg font-bold flex items-center gap-1">4.7<span class="material-symbols-outlined" style="font-size:14px;color:#fbbf24;font-variation-settings:'FILL' 1;">star</span></div>
+          </div>
+        </div>
+        <div class="w-full bg-surface-container h-3 rounded-full overflow-hidden mb-1">
+          <div class="bg-blue-500 h-full w-[65%] rounded-full"></div>
+        </div>
+        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+          <span>Dispatch</span><span>Scene</span><span>ER</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMB-22: Offline BLS -->
+    <div class="amb-card bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(24,29,26,0.06)] hover:-translate-y-1 transition-all duration-300 relative border-l-[6px] border-slate-400 cursor-pointer"
+         data-unit="AMB-22" data-type="BLS" data-status="offline" data-driver="Unassigned" data-location="Station">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6 opacity-60">
+          <div class="flex flex-col gap-2">
+            <span class="bg-surface-container-high text-on-surface text-xs font-extrabold px-3 py-1 rounded-full w-fit tracking-wider">AMB-22</span>
+            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter w-fit">BLS UNIT</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Offline</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 mb-6 opacity-60">
+          <div class="w-12 h-12 rounded-full overflow-hidden bg-slate-200 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-400">person_off</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-400">Unassigned</h3>
+            <p class="text-[10px] font-bold text-slate-400 uppercase">Station Maintenance</p>
+          </div>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-3 text-slate-400 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">handyman</span>
+            <span class="font-medium italic">Equipment recalibration in progress</span>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between mb-6 opacity-60">
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Jobs</div><div class="text-lg font-bold">14</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Avg Resp</div><div class="text-lg font-bold">9.1m</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Rating</div>
+            <div class="text-lg font-bold flex items-center gap-1">4.8<span class="material-symbols-outlined" style="font-size:14px;color:#fbbf24;font-variation-settings:'FILL' 1;">star</span></div>
+          </div>
+        </div>
+        <button class="mark-available-btn w-full bg-surface-container hover:bg-surface-container-highest text-slate-600 font-bold py-3 rounded-xl transition-all">
+          MARK AVAILABLE
+        </button>
+      </div>
+    </div>
+
+    <!-- AMB-31: Available ALS -->
+    <div class="amb-card bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(24,29,26,0.06)] hover:-translate-y-1 transition-all duration-300 relative border-l-[6px] border-emerald-500 cursor-pointer"
+         data-unit="AMB-31" data-type="ALS" data-status="available" data-driver="Alex Chen" data-location="North Sector — Point Alpha">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex flex-col gap-2">
+            <span class="bg-surface-container-high text-on-surface text-xs font-extrabold px-3 py-1 rounded-full w-fit tracking-wider">AMB-31</span>
+            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter w-fit">ALS UNIT</span>
+          </div>
+          <div class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Available</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container">
+            <img alt="Alex Chen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApOcBzfXGVHoTUqPKw8xOoT81P_Luy2WqMYD5SKuvBRUYk9q0farQ71hYzhRXeg4i1d9bQNXj4Bpk2nNO5NpQy9uI8Zx7noDEDjGzDHbLmVYIVySaGC02wkY6-omWmaKaJ7pMvNv2wBCujF1IrTqv2mopSb29WbF45K1DEbpoO2Do_0-L09ubIDFbMHjdNk5nNO9u0rPOEfTQTdJTBbxc681Qve-nNt02tqZY_KXli2WXemFLkjlfn3i98Bg8NdxoX7DfJdLNFRg">
+          </div>
+          <div>
+            <h3 class="font-bold text-on-surface">Alex Chen</h3>
+            <div class="flex gap-1 mt-1">
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">ALS</span>
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">FLIGHT</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+            <span class="font-medium">North Sector — Point Alpha</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">schedule</span>
+            <span class="font-medium">Shift: 14:00 – 02:00</span>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between mb-6">
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Jobs</div><div class="text-lg font-bold">03</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Avg Resp</div><div class="text-lg font-bold">7.8m</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Rating</div>
+            <div class="text-lg font-bold flex items-center gap-1">5.0<span class="material-symbols-outlined" style="font-size:14px;color:#fbbf24;font-variation-settings:'FILL' 1;">star</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMB-05: Available BLS -->
+    <div class="amb-card bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(24,29,26,0.06)] hover:-translate-y-1 transition-all duration-300 relative border-l-[6px] border-emerald-500 cursor-pointer"
+         data-unit="AMB-05" data-type="BLS" data-status="available" data-driver="Priya Sharma" data-location="East Wing Station">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex flex-col gap-2">
+            <span class="bg-surface-container-high text-on-surface text-xs font-extrabold px-3 py-1 rounded-full w-fit tracking-wider">AMB-05</span>
+            <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter w-fit">BLS UNIT</span>
+          </div>
+          <div class="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Available</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-white font-extrabold text-lg">PS</div>
+          <div>
+            <h3 class="font-bold text-on-surface">Priya Sharma</h3>
+            <div class="flex gap-1 mt-1">
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">BLS</span>
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">EMT</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">location_on</span>
+            <span class="font-medium">East Wing Station</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">schedule</span>
+            <span class="font-medium">Shift: 08:00 – 20:00</span>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between mb-6">
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Jobs</div><div class="text-lg font-bold">07</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Avg Resp</div><div class="text-lg font-bold">9.2m</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Rating</div>
+            <div class="text-lg font-bold flex items-center gap-1">4.6<span class="material-symbols-outlined" style="font-size:14px;color:#fbbf24;font-variation-settings:'FILL' 1;">star</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMB-19: En Route ALS -->
+    <div class="amb-card bg-surface-container-lowest rounded-lg overflow-hidden shadow-[0_20px_40px_rgba(24,29,26,0.06)] hover:-translate-y-1 transition-all duration-300 relative border-l-[6px] border-blue-500 cursor-pointer"
+         data-unit="AMB-19" data-type="ALS" data-status="enroute" data-driver="Raj Patel" data-location="Downtown Core">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-6">
+          <div class="flex flex-col gap-2">
+            <span class="bg-surface-container-high text-on-surface text-xs font-extrabold px-3 py-1 rounded-full w-fit tracking-wider">AMB-19</span>
+            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-tighter w-fit">ALS UNIT</span>
+          </div>
+          <div class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span class="text-[10px] font-bold uppercase tracking-widest">En Route</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 rounded-full bg-tertiary flex items-center justify-center text-white font-extrabold text-lg">RP</div>
+          <div>
+            <h3 class="font-bold text-on-surface">Raj Patel</h3>
+            <div class="flex gap-1 mt-1">
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">ALS</span>
+              <span class="bg-surface-container-low text-slate-500 text-[8px] font-bold px-1.5 py-0.5 rounded">ACLS</span>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-3 mb-6">
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">navigation</span>
+            <span class="font-bold text-blue-600">ETA: 7 mins — Downtown Core</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-500 text-sm">
+            <span class="material-symbols-outlined" style="font-size:18px;">flag</span>
+            <span class="font-medium">Incident #7731-A</span>
+          </div>
+        </div>
+        <div class="pt-6 border-t border-slate-50 flex items-center justify-between mb-6">
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Jobs</div><div class="text-lg font-bold">21</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Avg Resp</div><div class="text-lg font-bold">6.9m</div></div>
+          <div><div class="text-xs text-slate-400 font-bold uppercase">Rating</div>
+            <div class="text-lg font-bold flex items-center gap-1">4.8<span class="material-symbols-outlined" style="font-size:14px;color:#fbbf24;font-variation-settings:'FILL' 1;">star</span></div>
+          </div>
+        </div>
+        <div class="w-full bg-surface-container h-3 rounded-full overflow-hidden mb-1">
+          <div class="bg-blue-500 h-full w-[40%] rounded-full"></div>
+        </div>
+        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+          <span>Dispatch</span><span>Scene</span><span>ER</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── LIST VIEW ── -->
+  <div id="list-view">
+    <div class="bg-surface-container-lowest rounded-lg overflow-hidden shadow-sm">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+            <th class="text-left px-6 py-4">Unit</th>
+            <th class="text-left px-6 py-4">Type</th>
+            <th class="text-left px-6 py-4">Driver</th>
+            <th class="text-left px-6 py-4">Location</th>
+            <th class="text-left px-6 py-4">Status</th>
+            <th class="text-left px-6 py-4">Rating</th>
+            <th class="text-left px-6 py-4">Action</th>
+          </tr>
+        </thead>
+        <tbody id="list-tbody">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── BOTTOM VIEW TOGGLE ── -->
+<div class="fixed bottom-8 left-1/2 -translate-x-1/2 glass-nav px-2 py-2 rounded-full shadow-lg border border-white/40 flex items-center gap-1 z-40">
+  <button id="btn-grid" class="flex items-center gap-2 bg-primary-container text-white px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest transition-all">
+    <span class="material-symbols-outlined" style="font-size:14px;">grid_view</span> Grid
+  </button>
+  <button id="btn-list" class="flex items-center gap-2 text-slate-500 hover:bg-slate-100 px-4 py-2 rounded-full font-bold text-xs uppercase tracking-widest transition-all">
+    <span class="material-symbols-outlined" style="font-size:14px;">view_list</span> List
+  </button>
+</div>
+
+<!-- ══════════════════ UNIT DETAIL DRAWER ══════════════════ -->
+<div id="unit-drawer" class="fixed top-[56px] right-4 bottom-4 w-[400px] glass-nav rounded-lg shadow-2xl border border-white/40 z-50 p-8 overflow-y-auto no-scrollbar" style="transform:translateX(420px)">
+  <div class="flex justify-between items-center mb-8">
+    <div>
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Unit Details</p>
+      <h2 class="text-xl font-extrabold font-headline" id="drawer-unit">AMB-07</h2>
+    </div>
+    <button id="drawer-close" class="p-2 hover:bg-slate-100 rounded-full">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+  <div class="space-y-8">
+    <!-- Driver info -->
+    <div class="flex items-center gap-4 p-4 bg-white rounded-xl">
+      <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-white font-extrabold" id="drawer-avatar">SJ</div>
+      <div>
+        <p class="font-bold" id="drawer-driver">Sarah Jenkins</p>
+        <p class="text-xs text-slate-500" id="drawer-location">St. Jude Medical Center</p>
+      </div>
+      <span class="ml-auto px-3 py-1 rounded-full text-[10px] font-bold uppercase" id="drawer-status-badge">Available</span>
+    </div>
+    <!-- Trend chart -->
+    <div class="p-6 bg-white rounded-xl">
+      <div class="text-xs text-slate-400 font-bold uppercase mb-3">Operational Trend (7d)</div>
+      <div class="h-32 w-full bg-slate-50 rounded-lg flex items-end gap-1 px-4 py-2">
+        <div class="bg-primary/20 w-full h-[40%] rounded-t-sm"></div>
+        <div class="bg-primary/40 w-full h-[60%] rounded-t-sm"></div>
+        <div class="bg-primary/30 w-full h-[45%] rounded-t-sm"></div>
+        <div class="bg-primary/60 w-full h-[80%] rounded-t-sm"></div>
+        <div class="bg-primary/50 w-full h-[70%] rounded-t-sm"></div>
+        <div class="bg-primary    w-full h-[95%] rounded-t-sm"></div>
+        <div class="bg-primary/80 w-full h-[85%] rounded-t-sm"></div>
+      </div>
+    </div>
+    <!-- Inventory -->
+    <div class="space-y-4">
+      <h3 class="font-bold text-sm uppercase tracking-widest text-slate-400">Inventory Status</h3>
+      <div class="flex justify-between items-center py-2 border-b border-slate-100">
+        <span class="text-slate-600">Defibrillator</span>
+        <span class="text-emerald-500 font-bold">CERTIFIED</span>
+      </div>
+      <div class="flex justify-between items-center py-2 border-b border-slate-100">
+        <span class="text-slate-600">Oxygen (Reserve)</span>
+        <span class="text-on-surface font-bold">88%</span>
+      </div>
+      <div class="flex justify-between items-center py-2 border-b border-slate-100">
+        <span class="text-slate-600">Trauma Kit B</span>
+        <span class="text-orange-500 font-bold">LOW STOCK</span>
+      </div>
+      <div class="flex justify-between items-center py-2 border-b border-slate-100">
+        <span class="text-slate-600">Stretcher</span>
+        <span class="text-emerald-500 font-bold">OK</span>
+      </div>
+    </div>
+    <button class="w-full primary-gradient text-white py-4 rounded-xl font-bold shadow-lg">VIEW FULL PROFILE</button>
+  </div>
+</div>
+
+<!-- ══════════════════ ADD AMBULANCE MODAL ══════════════════ -->
+<div id="add-modal" class="fixed inset-0 z-50 items-center justify-center bg-black/40 backdrop-blur-sm">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg p-8 relative mx-4">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-extrabold font-headline">Add New Ambulance</h2>
+      <button id="modal-close" class="p-2 hover:bg-slate-100 rounded-full">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form id="add-amb-form" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Unit ID</label>
+          <input required type="text" placeholder="AMB-XX" class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 font-medium">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Type</label>
+          <select class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 font-medium">
+            <option>ALS</option>
+            <option>BLS</option>
+            <option>ICU</option>
+            <option>Neonatal</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Driver Name</label>
+        <input required type="text" placeholder="Full name" class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 font-medium">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Driver Phone</label>
+        <input required type="tel" placeholder="+91 XXXXX XXXXX" class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 font-medium">
+      </div>
+      <div class="h-[1px] bg-slate-100 my-1"></div>
+      <div>
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Paramedic Name</label>
+        <input type="text" placeholder="Full name (optional)" class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 font-medium">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Paramedic Phone</label>
+        <input type="tel" placeholder="+91 XXXXX XXXXX (optional)" class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 font-medium">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Current Location</label>
+        <input type="text" placeholder="Station or address" class="w-full bg-surface-container-high border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary/20 font-medium">
+      </div>
+      <button type="submit" class="w-full primary-gradient text-white py-4 rounded-xl font-bold shadow-lg mt-2 active:scale-95 transition-transform">
+        ADD TO FLEET
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════ SUCCESS TOAST ══════════════════ -->
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 hidden glass-nav bg-emerald-50 border border-emerald-500/30 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3">
+  <span class="material-symbols-outlined text-emerald-600" style="font-variation-settings:'FILL' 1;">check_circle</span>
+  <span class="text-[13px] font-bold text-emerald-700" id="toast-msg">Done!</span>
+</div>
+
+<!-- ══════════════════ SCRIPTS ══════════════════ -->
+
+<script src="js/fleet.js?v=2"></script>
+</body>
+</html>
