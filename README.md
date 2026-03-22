@@ -60,8 +60,7 @@ Praan is an AI-powered emergency dispatch platform that:
 
 ## 🏗️ Architecture
 
-![Praan System Architecture](<img width="1462" height="740" alt="archipraan" src="https://github.com/user-attachments/assets/32cf63ef-5604-4acb-92a6-1cde1af4869d" />
-)
+![Praan System Architecture]<img width="1462" height="740" alt="archipraan" src="https://github.com/user-attachments/assets/94e4f326-1770-4762-a05b-f2ed558cb386" />
 
 ---
 
